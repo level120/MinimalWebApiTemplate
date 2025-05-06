@@ -6,11 +6,18 @@ using Microsoft.AspNetCore.HttpLogging;
 using Polly;
 
 using WebApi.Contexts;
-using WebApi.Endpoints.V1;
 using WebApi.Extensions;
+using WebApi.Services.Interfaces;
+
+// Add logging for bootstrap.
+LogConfigurationExtensions.ConfigureBootstrapLogging();
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
+// Add logging to the application.
+builder.ConfigureLogging();
+
+// Configure JSON serialization options for the application.
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.TypeInfoResolverChain.Insert(0, OpenApiJsonSerializerContext.Default);
@@ -25,12 +32,23 @@ builder.Services.AddOpenApi();
 builder.Services.AddCustomEndpoints();
 
 // Learn more about configuring HTTP logging at https://learn.microsoft.com/ko-kr/aspnet/core/fundamentals/http-requests?view=aspnetcore-9.0#use-polly-based-handlers
-builder.Services.AddHttpClient<ErrorReportEndpoints>()
+builder.Services.AddHttpClient<IBackendApiService>()
                 .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(3, retryNumber => TimeSpan.FromMilliseconds(500 * Math.Pow(2, retryNumber))));
 
-builder.Services.AddHttpLogging(logging => logging.LoggingFields = HttpLoggingFields.All);
+builder.Services.AddHttpLogging(
+    logging => logging.LoggingFields = HttpLoggingFields.Duration |
+                                       HttpLoggingFields.RequestMethod |
+                                       HttpLoggingFields.RequestPath |
+                                       HttpLoggingFields.RequestProtocol |
+                                       HttpLoggingFields.ResponseStatusCode);
+
+// Add custom services to the application.
+builder.Services.AddCustomServices();
 
 var app = builder.Build();
+
+// Use logging.
+app.UseConfiguredLogging();
 
 // Register the custom endpoints.
 app.RegisterCustomEndpoints();

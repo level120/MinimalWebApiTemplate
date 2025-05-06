@@ -1,21 +1,22 @@
 using WebApi.Endpoints.Interfaces;
+using WebApi.Services.Interfaces;
 
 namespace WebApi.Endpoints.V1;
 
 internal sealed class ErrorReportEndpoints : ICustomEndpoints
 {
     private readonly ILogger<ErrorReportEndpoints> _logger;
-    private readonly HttpClient _httpClient;
+    private readonly IBackendApiService _backendApiService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ErrorReportEndpoints"/> class.
     /// </summary>
     /// <param name="httpClient">httpClient</param>
     /// <param name="logger">logger</param>
-    public ErrorReportEndpoints(HttpClient httpClient, ILogger<ErrorReportEndpoints> logger)
+    public ErrorReportEndpoints(ILogger<ErrorReportEndpoints> logger, IBackendApiService backendApiService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _backendApiService = backendApiService ?? throw new ArgumentNullException(nameof(backendApiService));
     }
 
     /// <inheritdoc />
